@@ -1,5 +1,22 @@
 // API Client für direkte PostgreSQL-Verbindung über Backend
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001/api'
+// Automatisch die richtige API-URL ermitteln basierend auf dem aktuellen Host
+function getApiUrl(): string {
+  // Wenn VITE_API_URL gesetzt ist, diese verwenden
+  if (import.meta.env.VITE_API_URL) {
+    return import.meta.env.VITE_API_URL
+  }
+  
+  // Im Browser: API auf demselben Host wie Frontend, Port 3001
+  if (typeof window !== 'undefined') {
+    const host = window.location.hostname
+    return `http://${host}:3001/api`
+  }
+  
+  // Fallback für Development
+  return 'http://localhost:3001/api'
+}
+
+const API_URL = getApiUrl()
 
 class ApiClient {
   private baseUrl: string
