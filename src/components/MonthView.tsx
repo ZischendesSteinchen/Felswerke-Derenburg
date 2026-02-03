@@ -188,16 +188,21 @@ export function MonthView({
 
   const weekRows = getWeekRows()
 
-  const getMaxAppointmentsInWeek = (weekDays: Date[]) => {
-    let maxCount = 0
+  const getMaxAppointmentsInWeek = (weekDays: Date[], weekIdx: number) => {
+    let maxSingleDayCount = 0
     weekDays.forEach(day => {
       const dayAppointments = getAppointmentsForDate(day)
       const singleDayAppointments = dayAppointments.filter(apt => !apt.multiDayGroupId)
-      if (singleDayAppointments.length > maxCount) {
-        maxCount = singleDayAppointments.length
+      if (singleDayAppointments.length > maxSingleDayCount) {
+        maxSingleDayCount = singleDayAppointments.length
       }
     })
-    return maxCount
+    
+    // Zähle auch die mehrtägigen Spans in dieser Woche
+    const multiDayCount = multiDaySpans.filter(span => span.week === weekIdx).length
+    
+    // Gesamtanzahl: mehrtägige Spans + maximale Einzeltermine
+    return maxSingleDayCount + multiDayCount
   }
 
   return (
@@ -216,7 +221,7 @@ export function MonthView({
           </div>
 
           {weekRows.map((weekDays, weekIdx) => {
-            const maxAppointments = getMaxAppointmentsInWeek(weekDays)
+            const maxAppointments = getMaxAppointmentsInWeek(weekDays, weekIdx)
             const minHeight = maxAppointments > 3 ? 120 + (maxAppointments - 3) * 24 : 120
 
             return (
