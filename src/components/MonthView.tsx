@@ -20,6 +20,9 @@ interface MultiDaySpan {
   endCol: number
   color: string
   title: string
+  week: number
+  isFirstWeek: boolean
+  isLastWeek: boolean
 }
 
 export function MonthView({
@@ -143,14 +146,29 @@ export function MonthView({
         )
 
         if (startIdx !== -1 && endIdx !== -1) {
-          spans.push({
-            groupId: apt.multiDayGroupId,
-            appointments: groupAppointments,
-            startCol: startIdx % 7,
-            endCol: endIdx % 7,
-            color: apt.color,
-            title: apt.location || apt.title
-          })
+          // Teile den Span auf, wenn er über mehrere Wochen geht
+          const startWeek = Math.floor(startIdx / 7)
+          const endWeek = Math.floor(endIdx / 7)
+          
+          for (let week = startWeek; week <= endWeek; week++) {
+            const weekStartIdx = week * 7
+            const weekEndIdx = weekStartIdx + 6
+            
+            const spanStartInWeek = Math.max(startIdx, weekStartIdx)
+            const spanEndInWeek = Math.min(endIdx, weekEndIdx)
+            
+            spans.push({
+              groupId: `${apt.multiDayGroupId}-week-${week}`,
+              appointments: groupAppointments,
+              startCol: spanStartInWeek % 7,
+              endCol: spanEndInWeek % 7,
+              color: apt.color,
+              title: apt.equipment || apt.title,
+              week: week,
+              isFirstWeek: week === startWeek,
+              isLastWeek: week === endWeek,
+            } as MultiDaySpan & { week: number; isFirstWeek: boolean; isLastWeek: boolean })
+          }
         }
       }
     })
@@ -253,7 +271,7 @@ export function MonthView({
                               className="text-xs px-2 py-0.5 rounded text-white font-medium truncate cursor-pointer hover:scale-105 transition-transform"
                               style={{ backgroundColor: apt.color.startsWith('#') ? apt.color : undefined }}
                             >
-                              {apt.location || apt.title}
+                              {apt.equipment || apt.title}
                             </div>
                           ))}
                         </div>
@@ -267,19 +285,10 @@ export function MonthView({
                 </div>
 
                 {multiDaySpans
-                  .filter(span => {
-                    const spanStartWeek = Math.floor(days.findIndex(d => {
-                      const apt = span.appointments[0]
-                      const startDate = new Date(apt.startDate)
-                      return d.getDate() === startDate.getDate() &&
-                             d.getMonth() === startDate.getMonth() &&
-                             d.getFullYear() === startDate.getFullYear()
-                    }) / 7)
-                    return spanStartWeek === weekIdx
-                  })
+                  .filter(span => span.week === weekIdx)
                   .map((span, spanIdx) => {
                     const startCol = span.startCol
-                    const endCol = Math.min(span.endCol, 6)
+                    const endCol = span.endCol
                     const spanWidth = endCol - startCol + 1
                     
                     return (
@@ -292,8 +301,8 @@ export function MonthView({
                         }}
                         className={cn(
                           'absolute text-xs px-2 py-1 text-white font-medium cursor-pointer hover:scale-[1.02] transition-transform z-10',
-                          'rounded-l-md',
-                          endCol === 6 || span.endCol <= 6 ? 'rounded-r-md' : ''
+                          span.isFirstWeek ? 'rounded-l-md' : '',
+                          span.isLastWeek ? 'rounded-r-md' : ''
                         )}
                         style={{
                           backgroundColor: span.color.startsWith('#') ? span.color : undefined,
