@@ -45,10 +45,10 @@ CREATE TABLE appointments (
     end_date TIMESTAMP WITH TIME ZONE NOT NULL,
     color VARCHAR(50) DEFAULT '#3b82f6',
     all_day BOOLEAN DEFAULT false,
-    multi_day_group_id UUID,
+    multi_day_group_id TEXT,
     is_first_day BOOLEAN,
     is_last_day BOOLEAN,
-    job_group_id UUID,
+    job_group_id TEXT,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
