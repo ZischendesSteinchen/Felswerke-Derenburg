@@ -39,7 +39,7 @@ export function MultiDaySelectionDialog({
   onClose,
   selectedDates,
 }: MultiDaySelectionDialogProps) {
-  const { appointments, createManyAppointments, setAppointments } = useAppointments()
+  const { appointments, createManyAppointments } = useAppointments()
   const { users } = useUsers()
   const { vehicles } = useVehicles()
 
@@ -208,10 +208,10 @@ export function MultiDaySelectionDialog({
     createAppointments()
   }
 
-  const createAppointments = () => {
+  const createAppointments = async () => {
     const baseTimestamp = Date.now()
     const jobGroupId = `job-${baseTimestamp}-${Math.random().toString(36).substr(2, 9)}`
-    const newAppointments: Appointment[] = []
+    const newAppointments: Omit<Appointment, 'id'>[] = []
     
     selectedVehicles.forEach((vehicleId, vehicleIndex) => {
       const vehicle = (vehicles || []).find(v => v.id === vehicleId)
@@ -223,21 +223,24 @@ export function MultiDaySelectionDialog({
       dayConfigs.forEach((config, dayIndex) => {
         const [year, month, day] = config.dateString.split('-').map(Number)
         
-        let startDate: Date
-        let endDate: Date
+        let startDateStr: string
+        let endDateStr: string
 
         if (config.allDay) {
-          startDate = new Date(year, month - 1, day, 0, 0)
-          endDate = new Date(year, month - 1, day, 23, 59)
+          // Für ganztägige Termine: nur das Datum ohne Zeit
+          startDateStr = config.dateString
+          endDateStr = config.dateString
         } else {
+          // Für Termine mit Zeit: ISO String mit Zeit
           const [startHour, startMinute] = config.startTime.split(':').map(Number)
           const [endHour, endMinute] = config.endTime.split(':').map(Number)
-          startDate = new Date(year, month - 1, day, startHour, startMinute)
-          endDate = new Date(year, month - 1, day, endHour, endMinute)
+          const startDate = new Date(year, month - 1, day, startHour, startMinute)
+          const endDate = new Date(year, month - 1, day, endHour, endMinute)
+          startDateStr = startDate.toISOString()
+          endDateStr = endDate.toISOString()
         }
 
         newAppointments.push({
-          id: `${baseTimestamp}-${vehicleIndex}-${dayIndex}-${Math.random().toString(36).substr(2, 9)}`,
           title: selectedAuftrag || 'Ohne Auftrag',
           location: selectedAuftrag || 'Ohne Auftrag',
           address: '',
@@ -245,8 +248,8 @@ export function MultiDaySelectionDialog({
           workers: selectedWorkers,
           equipment: vehicle?.name || 'Unbekanntes Fahrzeug',
           notes: notes,
-          startDate: startDate.toISOString(),
-          endDate: endDate.toISOString(),
+          startDate: startDateStr,
+          endDate: endDateStr,
           color: vehicleColor,
           allDay: config.allDay,
           multiDayGroupId: isMultiDay ? groupId : undefined,
@@ -257,15 +260,20 @@ export function MultiDaySelectionDialog({
       })
     })
 
-    setAppointments((currentAppointments) => [...(currentAppointments || []), ...newAppointments])
-    
-    const totalTermine = newAppointments.length
-    const fahrzeugCount = selectedVehicles.length
-    toast.success(`${totalTermine} Termin${totalTermine > 1 ? 'e' : ''} für ${fahrzeugCount} Fahrzeug${fahrzeugCount > 1 ? 'e' : ''} erstellt`)
-    
-    setTimeout(() => {
-      handleClose()
-    }, 100)
+    try {
+      await createManyAppointments(newAppointments)
+      
+      const totalTermine = newAppointments.length
+      const fahrzeugCount = selectedVehicles.length
+      toast.success(`${totalTermine} Termin${totalTermine > 1 ? 'e' : ''} für ${fahrzeugCount} Fahrzeug${fahrzeugCount > 1 ? 'e' : ''} erstellt`)
+      
+      setTimeout(() => {
+        handleClose()
+      }, 100)
+    } catch (error) {
+      console.error('Fehler beim Erstellen der Termine:', error)
+      toast.error('Fehler beim Erstellen der Termine')
+    }
   }
 
   const handleClose = () => {
