@@ -25,7 +25,7 @@ interface AbwesenheitenDialogProps {
 }
 
 export function AbwesenheitenDialog({ open, onOpenChange, currentUser }: AbwesenheitenDialogProps) {
-  const { absences, createAbsence, setAbsences } = useAbsences()
+  const { absences, createAbsence: createAbsenceInDb, setAbsences } = useAbsences()
   const { users } = useUsers()
   const [showRequestForm, setShowRequestForm] = useState(false)
   const [durationType, setDurationType] = useState<'single' | 'multiple'>('single')

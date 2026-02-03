@@ -16,11 +16,11 @@ type SortField = 'jobNumber' | 'customer' | 'contactPerson' | 'description' | 'a
 type SortDirection = 'asc' | 'desc'
 
 export function AuftraegePage() {
-  const { jobs, createJob: addJob, updateJob, deleteJob: removeJob, setJobs } = useJobs()
+  const { jobs, createJob: addJobToDb, updateJob, deleteJob: removeJobFromDb, setJobs } = useJobs()
   const { customers, createCustomer: addCustomer, setCustomers } = useCustomers()
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false)
   const [selectedJob, setSelectedJob] = useState<Job | null>(null)
-  const [deleteJob, setDeleteJob] = useState<Job | null>(null)
+  const [jobToDelete, setJobToDelete] = useState<Job | null>(null)
   const [filterProvider, setFilterProvider] = useState('alle')
   const [isAddCustomerDialogOpen, setIsAddCustomerDialogOpen] = useState(false)
   const [isAddContactPersonDialogOpen, setIsAddContactPersonDialogOpen] = useState(false)
@@ -219,11 +219,11 @@ export function AuftraegePage() {
   }
 
   const handleDeleteJob = () => {
-    if (!deleteJob) return
+    if (!jobToDelete) return
 
-    setJobs(current => (current || []).filter(j => j.id !== deleteJob.id))
+    setJobs(current => (current || []).filter(j => j.id !== jobToDelete.id))
     toast.success('Auftrag gelöscht')
-    setDeleteJob(null)
+    setJobToDelete(null)
   }
 
   const getCustomerName = (customerId: string) => {
@@ -652,12 +652,12 @@ export function AuftraegePage() {
               </AlertDialogContent>
             </AlertDialog>
 
-            <AlertDialog open={!!deleteJob} onOpenChange={() => setDeleteJob(null)}>
+            <AlertDialog open={!!jobToDelete} onOpenChange={() => setJobToDelete(null)}>
               <AlertDialogContent>
                 <AlertDialogHeader>
                   <AlertDialogTitle>Auftrag löschen?</AlertDialogTitle>
                   <AlertDialogDescription>
-                    Sind Sie sicher, dass Sie den Auftrag "{deleteJob?.jobNumber}" löschen möchten? Diese Aktion kann nicht rückgängig gemacht werden.
+                    Sind Sie sicher, dass Sie den Auftrag "{jobToDelete?.jobNumber}" löschen möchten? Diese Aktion kann nicht rückgängig gemacht werden.
                   </AlertDialogDescription>
                 </AlertDialogHeader>
                 <AlertDialogFooter>
@@ -841,7 +841,7 @@ export function AuftraegePage() {
                             variant="ghost"
                             size="icon"
                             className="h-8 w-8"
-                            onClick={() => setDeleteJob(job)}
+                            onClick={() => setJobToDelete(job)}
                           >
                             <Trash size={18} className="text-red-600" />
                           </Button>
