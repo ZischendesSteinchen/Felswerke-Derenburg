@@ -213,8 +213,11 @@ export function MultiDaySelectionDialog({
     const jobGroupId = `job-${baseTimestamp}-${Math.random().toString(36).substr(2, 9)}`
     const newAppointments: Omit<Appointment, 'id'>[] = []
     
-    selectedVehicles.forEach((vehicleId, vehicleIndex) => {
-      const vehicle = (vehicles || []).find(v => v.id === vehicleId)
+    // Wenn keine Fahrzeuge ausgewählt, erstelle einen Termin ohne Fahrzeug
+    const vehicleList = selectedVehicles.length > 0 ? selectedVehicles : [null]
+    
+    vehicleList.forEach((vehicleId, vehicleIndex) => {
+      const vehicle = vehicleId ? (vehicles || []).find(v => v.id === vehicleId) : null
       const vehicleColor = vehicle?.color || '#3b82f6'
       
       const groupId = `group-${baseTimestamp}-${vehicleIndex}-${Math.random().toString(36).substr(2, 9)}`
@@ -241,12 +244,12 @@ export function MultiDaySelectionDialog({
         }
 
         newAppointments.push({
-          title: selectedAuftrag || 'Ohne Auftrag',
-          location: selectedAuftrag || 'Ohne Auftrag',
+          title: selectedAuftrag || '',
+          location: selectedAuftrag || '',
           address: '',
           customer: '',
           workers: selectedWorkers,
-          equipment: vehicle?.name || 'Unbekanntes Fahrzeug',
+          equipment: vehicle?.name || '',
           notes: notes,
           startDate: startDateStr,
           endDate: endDateStr,
@@ -264,8 +267,7 @@ export function MultiDaySelectionDialog({
       await createManyAppointments(newAppointments)
       
       const totalTermine = newAppointments.length
-      const fahrzeugCount = selectedVehicles.length
-      toast.success(`${totalTermine} Termin${totalTermine > 1 ? 'e' : ''} für ${fahrzeugCount} Fahrzeug${fahrzeugCount > 1 ? 'e' : ''} erstellt`)
+      toast.success(`${totalTermine} Termin${totalTermine > 1 ? 'e' : ''} erstellt`)
       
       setTimeout(() => {
         handleClose()
