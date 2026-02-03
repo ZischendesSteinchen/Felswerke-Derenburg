@@ -40,10 +40,11 @@ export function LoginScreen({ onLogin, users }: LoginScreenProps) {
     <div 
       className="min-h-screen flex items-center justify-center p-4 bg-cover bg-center bg-no-repeat relative"
       style={{
-        backgroundImage: `url('https://images.unsplash.com/photo-1611273426858-450d8e3c9fce?q=80&w=2070')`
+        backgroundImage: `url('/images/loginbg.jpeg')`
       }}
     >
-      <div className="absolute inset-0 bg-black/40 backdrop-blur-[2px]" />
+      {/* Weißer transparenter Overlay - Transparenz hier anpassen: bg-white/60 = 60% */}
+      <div className="absolute inset-0 bg-white/60" />
       <Card className="w-full max-w-md shadow-2xl relative z-10 bg-card/95 backdrop-blur-sm">
         <CardHeader className="space-y-3 text-center">
           <div className="mx-auto w-16 h-16 bg-primary rounded-full flex items-center justify-center">
